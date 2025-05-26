@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เว็บสุ่มรหัสผ่าน</title>
+  <style>
+    :root {
+      /* Colors */
+      --primary-color: #007bff; /* Blue */
+      --secondary-color: #6c757d; /* Gray */
+      --success-color: #28a745; /* Green */
+      --warning-color: #ffc107; /* Yellow/Gold */
+      --danger-color: #dc3545; /* Red */
+      --info-color: #17a2b8; /* Cyan */
+      --background-color: #f5f5f5;
+      --card-background-color: #fff;
+      --text-color: #333;
+      --border-color: #eee;
+
+      /* Strength Bar Colors */
+      --strength-very-weak: #dc3545; /* Red */
+      --strength-weak: #fd7e14; /* Orange */
+      --strength-good: #ffc107; /* Gold */
+      --strength-strong: #28a745; /* Green */
+      --strength-excellent: #198754; /* Darker Green */
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px; /* เพิ่มความกว้างเล็กน้อย */
+      margin: 50px auto;
+      padding: 25px; /* เพิ่ม padding */
+      background-color: var(--background-color);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1); /* เพิ่มเงาให้ดูมีมิติ */
+      color: var(--text-color);
+      position: relative; /* สำหรับตำแหน่งปุ่มภาษา */
+    }
+
+    /* Header และปุ่มเปลี่ยนภาษา */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .header-container h1 {
+      margin: 0;
+      font-size: 2em;
+      color: var(--primary-color);
+    }
+
+    .header-container #langBtn {
+      padding: 8px 15px;
+      font-size: 0.9em;
+      border-radius: 5px;
+      background-color: var(--info-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .header-container #langBtn:hover {
+      background-color: #117a8b; /* Darker info color */
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: flex; /* ใช้ flexbox สำหรับ label และ input */
+      align-items: center;
+      margin-top: 10px;
+      font-size: 1.1em;
+      cursor: pointer; /* เพิ่ม cursor pointer ให้ label */
+    }
+
+    input[type="number"] {
+      width: 70px; /* ปรับความกว้าง */
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      font-size: 1em;
+      margin-left: 10px; /* เว้นระยะห่างจาก label */
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2); /* ทำให้ checkbox ใหญ่ขึ้นเล็กน้อย */
+    }
+
+    /* Buttons */
+    .button-group {
+      margin-top: 25px;
+      display: flex; /* จัดปุ่มให้อยู่ในแถวเดียวกัน */
+      flex-wrap: wrap; /* ให้ปุ่มขึ้นบรรทัดใหม่เมื่อไม่พอ */
+      gap: 10px; /* ระยะห่างระหว่างปุ่ม */
+    }
+
+    button {
+      padding: 12px 22px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      flex-grow: 1; /* ทำให้ปุ่มขยายได้ */
+      min-width: 150px; /* กำหนดความกว้างขั้นต่ำ */
+    }
+
+    button:hover {
+      transform: translateY(-2px); /* เพิ่ม animation เล็กน้อย */
+    }
+
+    #generateBtn {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    #generateBtn:hover {
+      background-color: #0056b3;
+    }
+
+    #copyBtn {
+      background-color: var(--success-color);
+      color: white;
+    }
+    #copyBtn:hover {
+      background-color: #218838;
+    }
+
+    #saveBtn {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+    #saveBtn:hover {
+      background-color: #5a6268;
+    }
+
+    /* Password Display */
+    #password {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: var(--card-background-color);
+      border: 1px dashed var(--primary-color); /* เปลี่ยนเป็นเส้นประ */
+      border-radius: 8px;
+      font-size: 24px; /* ขนาดใหญ่ขึ้น */
+      font-weight: bold;
+      color: var(--primary-color); /* สีเดียวกับปุ่มหลัก */
+      word-break: break-all; /* เปลี่ยนเป็น break-all เพื่อให้ข้อความยาวๆ ไม่เลยขอบ */
+      text-align: center;
+      min-height: 50px; /* กำหนดความสูงขั้นต่ำ */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Strength Bar */
+    #strengthBar {
+      width: 100%;
+      height: 12px; /* สูงขึ้นเล็กน้อย */
+      border-radius: 6px;
+      margin-top: 20px;
+      background-color: var(--border-color);
+      overflow: hidden; /* ซ่อนส่วนที่เกิน */
+    }
+    #strengthFill {
+      height: 100%;
+      width: 0%;
+      border-radius: 6px;
+      transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out; /* เพิ่ม transition */
+    }
+    #strengthText {
+      margin-top: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Toast Notification */
+    #toastNotification {
+        position: fixed;
+        top: -100px; /* เริ่มต้นซ่อนอยู่เหนือหน้าจอ */
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        opacity: 0;
+        transition: top 0.5s ease-out, opacity 0.5s ease-out; /* เพิ่ม transition */
+        text-align: center;
+        min-width: 250px;
+    }
+
+    #toastNotification.show {
+        top: 20px; /* เลื่อนลงมา 20px จากด้านบน */
+        opacity: 1;
+    }
+
+    /* Popup and Overlay (ซ่อนไว้เพราะเปลี่ยนไปใช้ Toast แทน) */
+    #overlay, #popup {
+      display: none;
+    }
+
+    /* Saved Passwords Section */
+    #savedPasswords {
+      margin-top: 40px;
+      background-color: var(--card-background-color);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* เงาเบาลง */
+    }
+    #savedPasswords h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    #savedPasswords ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 250px; /* จำกัดความสูงของรายการ */
+      overflow-y: auto; /* เพิ่ม scrollbar ถ้ามีหลายรายการ */
+    }
+    #savedPasswords li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 1em;
+        color: var(--text-color);
+    }
+    #savedPasswords li:last-child {
+        border-bottom: none;
+    }
+    #savedPasswords li span {
+        flex-grow: 1; /* ให้รหัสผ่านขยายพื้นที่ */
+        word-break: break-all; /* ให้รหัสผ่านยาวๆ ขึ้นบรรทัดใหม่ */
+        margin-right: 10px;
+        font-family: 'Courier New', Courier, monospace; /* ใช้ฟอนต์ที่อ่านง่ายสำหรับรหัสผ่าน */
+    }
+    #savedPasswords li button {
+        margin-left: 8px;
+        padding: 6px 12px;
+        font-size: 0.85em; /* ลดขนาดปุ่มในรายการ */
+        margin-top: 0;
+        flex-shrink: 0; /* ไม่ให้ปุ่มหดตัว */
+    }
+    #savedPasswords li button:nth-of-type(1) { /* Copy button */
+        background-color: var(--success-color);
+        color: white;
+    }
+    #savedPasswords li button:nth-of-type(1):hover {
+        background-color: #218838;
+    }
+    #savedPasswords li button:nth-of-type(2) { /* Delete button */
+        background-color: var(--danger-color);
+        color: white;
+    }
+    #savedPasswords li button:nth-of-type(2):hover {
+        background-color: #c82333;
+    }
+    #savedPasswords .download-btn {
+        display: block; /* ทำให้ปุ่มดาวน์โหลดอยู่บรรทัดใหม่ */
+        width: fit-content; /* ปรับขนาดตามเนื้อหา */
+        margin: 20px auto 0 auto; /* จัดกึ่งกลาง */
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+    }
+    #savedPasswords .download-btn:hover {
+        background-color: #0056b3;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      body {
+        margin: 20px;
+        padding: 15px;
+      }
+      .header-container h1 {
+        font-size: 1.8em;
+      }
+      .button-group button {
+        flex-grow: 1;
+        width: 100%; /* ทำให้ปุ่มเต็มความกว้าง */
+      }
+      #password {
+        font-size: 20px;
+      }
+      #toastNotification {
+        width: 90%;
+        min-width: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <h1 id="title">เว็บสุ่มรหัสผ่าน</h1>
+    <button id="langBtn">เปลี่ยนเป็น English</button>
+  </div>
+
+  <div class="form-group">
+    <label id="lengthLabel">
+      ความยาวรหัสผ่าน:
+      <input type="number" id="length" min="4" max="100" value="12">
+    </label>
+  </div>
+
+  <div class="form-group">
+    <label><input type="checkbox" id="includeLower" checked> <span id="lowerLabel">ตัวอักษรตัวเล็ก (a-z)</span></label>
+    <label><input type="checkbox" id="includeUpper" checked> <span id="upperLabel">ตัวอักษรตัวใหญ่ (A-Z)</span></label>
+    <label><input type="checkbox" id="includeNumbers" checked> <span id="numberLabel">ตัวเลข (0-9)</span></label>
+    <label><input type="checkbox" id="includeSymbols"> <span id="symbolLabel">อักขระพิเศษ (!@#$...)</span></label>
+  </div>
+
+  <div class="button-group">
+    <button id="generateBtn">สุ่มรหัสผ่าน</button>
+    <button id="copyBtn">คัดลอกรหัสผ่าน</button>
+    <button id="saveBtn">บันทึกรหัสผ่าน</button>
+  </div>
+
+  <div id="password"></div>
+
+  <div id="strengthBar">
+    <div id="strengthFill"></div>
+  </div>
+  <div id="strengthText"></div>
+
+  <div id="toastNotification"></div>
+
+  <div id="overlay" style="display: none;"></div>
+  <div id="popup" style="display: none;">
+    <div id="popupText"></div> <button id="popupCloseBtn">ตกลง</button>
+  </div>
+
+  <div id="savedPasswords">
+    <h3 id="savedTitle">รหัสผ่านที่บันทึกไว้:</h3>
+    <ul id="passwordList"></ul>
+    <button class="download-btn" id="downloadBtn">
+      ดาวน์โหลดรหัสผ่านทั้งหมด
+    </button>
+  </div>
+
+  <script>
+    // เก็บ Element ที่ใช้บ่อยๆ ไว้ในตัวแปรเพื่อประสิทธิภาพที่ดีขึ้น
+    const D = document;
+    const G = id => D.getElementById(id);
+
+    const elements = {
+        title: G("title"),
+        langBtn: G("langBtn"),
+        lengthLabel: G("lengthLabel"),
+        passwordLengthInput: G("length"),
+        includeLower: G("includeLower"),
+        lowerLabel: G("lowerLabel"),
+        includeUpper: G("includeUpper"),
+        upperLabel: G("upperLabel"),
+        includeNumbers: G("includeNumbers"),
+        numberLabel: G("numberLabel"),
+        includeSymbols: G("includeSymbols"),
+        symbolLabel: G("symbolLabel"),
+        generateBtn: G("generateBtn"),
+        copyBtn: G("copyBtn"),
+        saveBtn: G("saveBtn"),
+        passwordDisplay: G("password"),
+        strengthFill: G("strengthFill"),
+        strengthText: G("strengthText"),
+        // ลบ popup, overlay และ popupCloseBtn ออกจากการอ้างอิงตรงนี้
+        toastNotification: G("toastNotification"), // เพิ่มการอ้างอิงถึง toast
+        savedTitle: G("savedTitle"),
+        passwordList: G("passwordList"),
+        downloadBtn: G("downloadBtn")
+    };
+
+    let isThai = true;
+    const translations = {
+        th: {
+            title: "เว็บสุ่มรหัสผ่าน",
+            langBtn: "เปลี่ยนเป็น English",
+            lengthLabel: "ความยาวรหัสผ่าน:",
+            lowerLabel: "ตัวอักษรตัวเล็ก (a-z)",
+            upperLabel: "ตัวอักษรตัวใหญ่ (A-Z)",
+            numberLabel: "ตัวเลข (0-9)",
+            symbolLabel: "อักขระพิเศษ (!@#$...)",
+            generateBtn: "สุ่มรหัสผ่าน",
+            copyBtn: "คัดลอกรหัสผ่าน",
+            saveBtn: "บันทึกรหัสผ่าน",
+            savedTitle: "รหัสผ่านที่บันทึกไว้:",
+            downloadBtn: "ดาวน์โหลดรหัสผ่านทั้งหมด",
+            strengthLabels: ["อ่อนมาก", "ปานกลาง", "ดี", "ดีมาก", "ยอดเยี่ยม"],
+            strengthPrefix: "ความปลอดภัย: ",
+            messages: { // เปลี่ยน popup เป็น messages เพื่อความยืดหยุ่น
+                copySuccess: "คัดลอกรหัสผ่านแล้ว!",
+                copyFail: "ไม่สามารถคัดลอกรหัสผ่านได้",
+                noPasswordToCopy: "ไม่มีรหัสผ่านให้คัดลอก",
+                saveSuccess: "บันทึกรหัสผ่านแล้ว!",
+                noPasswordToSave: "ไม่มีรหัสผ่านที่สร้างไว้ให้บันทึก",
+                alreadySaved: "รหัสผ่านนี้ถูกบันทึกไว้แล้ว!",
+                deleteSuccess: "ลบรหัสผ่านแล้ว!",
+                downloading: "กำลังดาวน์โหลดรหัสผ่าน...",
+                noPasswordToDownload: "ไม่มีรหัสผ่านที่บันทึกไว้ให้ดาวน์โหลด",
+                selectCharType: "กรุณาเลือกอย่างน้อยหนึ่งประเภทของตัวอักษร"
+            },
+            listButtons: {
+                copy: "คัดลอก",
+                delete: "ลบ"
+            }
+        },
+        en: {
+            title: "Password Generator",
+            langBtn: "Switch to ภาษาไทย",
+            lengthLabel: "Password Length:",
+            lowerLabel: "Lowercase letters (a-z)",
+            upperLabel: "Uppercase letters (A-Z)",
+            numberLabel: "Numbers (0-9)",
+            symbolLabel: "Symbols (!@#$...)",
+            generateBtn: "Generate Password",
+            copyBtn: "Copy Password",
+            saveBtn: "Save Password",
+            savedTitle: "Saved Passwords:",
+            downloadBtn: "Download All Passwords",
+            strengthLabels: ["Very Weak", "Weak", "Good", "Strong", "Excellent"],
+            strengthPrefix: "Strength: ",
+            messages: { // เปลี่ยน popup เป็น messages เพื่อความยืดหยุ่น
+                copySuccess: "Password copied!",
+                copyFail: "Failed to copy password",
+                noPasswordToCopy: "No password to copy",
+                saveSuccess: "Password saved!",
+                noPasswordToSave: "No generated password to save",
+                alreadySaved: "This password is already saved!",
+                deleteSuccess: "Password deleted!",
+                downloading: "Downloading passwords...",
+                noPasswordToDownload: "No saved passwords to download",
+                selectCharType: "Please select at least one character type"
+            },
+            listButtons: {
+                copy: "Copy",
+                delete: "Delete"
+            }
+        }
+    };
+
+    // ฟังก์ชันสำหรับสลับภาษา
+    function toggleLanguage() {
+      isThai = !isThai;
+      const lang = isThai ? translations.th : translations.en;
+
+      elements.title.textContent = lang.title;
+      elements.langBtn.textContent = lang.langBtn;
+      elements.lengthLabel.firstChild.nodeValue = lang.lengthLabel; // เข้าถึง text node โดยตรง
+      elements.lowerLabel.textContent = lang.lowerLabel;
+      elements.upperLabel.textContent = lang.upperLabel;
+      elements.numberLabel.textContent = lang.numberLabel;
+      elements.symbolLabel.textContent = lang.symbolLabel;
+      elements.generateBtn.textContent = lang.generateBtn;
+      elements.copyBtn.textContent = lang.copyBtn;
+      elements.saveBtn.textContent = lang.saveBtn;
+      elements.savedTitle.textContent = lang.savedTitle;
+      elements.downloadBtn.textContent = lang.downloadBtn;
+
+      // อัปเดตข้อความความแข็งแรงทันที
+      updateStrengthBar(elements.passwordDisplay.textContent);
+
+      // อัปเดตข้อความของรายการรหัสผ่านที่บันทึกไว้
+      updateSavedPasswordsDisplay();
+    }
+
+    // ฟังก์ชันสร้างรหัสผ่าน
+    function generatePassword() {
+      const length = parseInt(elements.passwordLengthInput.value);
+      const includeLower = elements.includeLower.checked;
+      const includeUpper = elements.includeUpper.checked;
+      const includeNumbers = elements.includeNumbers.checked;
+      const includeSymbols = elements.includeSymbols.checked;
+
+      const charSets = {
+        lower: "abcdefghijklmnopqrstuvwxyz",
+        upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        numbers: "0123456789",
+        symbols: "!@#$%^&*()_+~`|}{[]:;?><,./-="
+      };
+
+      let allChars = "";
+      if (includeLower) allChars += charSets.lower;
+      if (includeUpper) allChars += charSets.upper;
+      if (includeNumbers) allChars += charSets.numbers;
+      if (includeSymbols) allChars += charSets.symbols;
+
+      const lang = isThai ? translations.th : translations.en;
+
+      if (allChars.length === 0) {
+        elements.passwordDisplay.textContent = lang.messages.selectCharType;
+        updateStrengthBar(""); // รีเซ็ตแถบความแข็งแรง
+        return;
+      }
+
+      // ปรับปรุงประสิทธิภาพ: สร้างอาร์เรย์ของตัวอักษรแล้วสุ่ม
+      const passwordArray = Array.from({ length: length }, () => {
+        const randomIndex = Math.floor(Math.random() * allChars.length);
+        return allChars[randomIndex];
+      });
+
+      const password = passwordArray.join('');
+      elements.passwordDisplay.textContent = password;
+      updateStrengthBar(password);
+    }
+
+    // ฟังก์ชันคัดลอกรหัสผ่าน
+    async function copyPassword() {
+      const password = elements.passwordDisplay.textContent;
+      const lang = isThai ? translations.th : translations.en;
+
+      if (!password || password === lang.messages.selectCharType) {
+          showToast(lang.messages.noPasswordToCopy);
+          return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(password);
+        showToast(lang.messages.copySuccess);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+        showToast(lang.messages.copyFail);
+      }
+    }
+
+    // ฟังก์ชันแสดง Toast Notification (แทนที่ showPopup)
+    let toastTimeout;
+    function showToast(message, duration = 3000) { // Default duration 3 seconds
+        clearTimeout(toastTimeout); // เคลียร์ timeout เก่าถ้ามี
+
+        elements.toastNotification.textContent = message;
+        elements.toastNotification.classList.add('show'); // เพิ่ม class เพื่อแสดง
+
+        toastTimeout = setTimeout(() => {
+            elements.toastNotification.classList.remove('show'); // ลบ class เพื่อซ่อน
+        }, duration);
+    }
+
+    // ฟังก์ชันอัปเดตแถบความแข็งแรง
+    function updateStrengthBar(password) {
+      const lang = isThai ? translations.th : translations.en;
+      const strengthLabels = lang.strengthLabels;
+
+      if (!password || password === lang.messages.selectCharType) {
+          elements.strengthFill.style.backgroundColor = "var(--border-color)";
+          elements.strengthFill.style.width = "0%";
+          elements.strengthText.textContent = "";
+          return;
+      }
+
+      let strength = 0;
+      // ใช้ RegExp แทนการสร้างบ่อยๆ
+      if (/[a-z]/.test(password)) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[!@#$%^&*()_+~`|}{[\]:;?><,./-=]/.test(password)) strength++;
+      if (password.length >= 8) strength++;
+      if (password.length >= 16 && strength >= 4) strength++; // เพิ่มเงื่อนไขให้รหัสผ่านยิ่งยาวยิ่งแข็งแรง
+
+      let color = "", label = "", width = "0%";
+
+      switch (strength) {
+        case 0:
+        case 1: color = "var(--strength-very-weak)"; width = "20%"; label = strengthLabels[0]; break;
+        case 2: color = "var(--strength-weak)"; width = "40%"; label = strengthLabels[1]; break;
+        case 3: color = "var(--strength-good)"; width = "60%"; label = strengthLabels[2]; break;
+        case 4: color = "var(--strength-strong)"; width = "80%"; label = strengthLabels[3]; break;
+        case 5:
+        case 6: color = "var(--strength-excellent)"; width = "100%"; label = strengthLabels[4]; break;
+      }
+
+      elements.strengthFill.style.backgroundColor = color;
+      elements.strengthFill.style.width = width;
+      elements.strengthText.textContent = lang.strengthPrefix + label;
+    }
+
+    // ฟังก์ชันบันทึกรหัสผ่าน
+    function savePassword() {
+        const password = elements.passwordDisplay.textContent;
+        const lang = isThai ? translations.th : translations.en;
+
+        if (!password || password === lang.messages.selectCharType) {
+            showToast(lang.messages.noPasswordToSave);
+            return;
+        }
+
+        // ตรวจสอบว่ารหัสผ่านนี้บันทึกไว้แล้วหรือยัง
+        const existingPasswords = Array.from(elements.passwordList.children).map(li => li.querySelector('span').textContent);
+        if (existingPasswords.includes(password)) {
+            showToast(lang.messages.alreadySaved);
+            return;
+        }
+
+        const listItem = D.createElement("li");
+        const passwordSpan = D.createElement("span");
+        passwordSpan.textContent = password;
+        listItem.appendChild(passwordSpan);
+
+        // ปุ่มคัดลอกสำหรับแต่ละรายการ
+        const copyBtn = D.createElement("button");
+        copyBtn.textContent = lang.listButtons.copy;
+        copyBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(password);
+                showToast(lang.messages.copySuccess);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showToast(lang.messages.copyFail);
+            }
+        };
+        listItem.appendChild(copyBtn);
+
+        // ปุ่มลบสำหรับแต่ละรายการ
+        const deleteBtn = D.createElement("button");
+        deleteBtn.textContent = lang.listButtons.delete;
+        deleteBtn.onclick = () => {
+            elements.passwordList.removeChild(listItem);
+            showToast(lang.messages.deleteSuccess);
+        };
+        listItem.appendChild(deleteBtn);
+
+        elements.passwordList.appendChild(listItem);
+        showToast(lang.messages.saveSuccess);
+    }
+
+    // ฟังก์ชันอัปเดตข้อความในรายการรหัสผ่านที่บันทึกไว้เมื่อเปลี่ยนภาษา
+    function updateSavedPasswordsDisplay() {
+        const lang = isThai ? translations.th : translations.en;
+        Array.from(elements.passwordList.children).forEach(li => {
+            const copyBtn = li.querySelector('button:nth-of-type(1)');
+            const deleteBtn = li.querySelector('button:nth-of-type(2)');
+            if (copyBtn) copyBtn.textContent = lang.listButtons.copy;
+            if (deleteBtn) deleteBtn.textContent = lang.listButtons.delete;
+        });
+    }
+
+    // ฟังก์ชันดาวน์โหลดรหัสผ่านทั้งหมด
+    function downloadPasswords() {
+        const lang = isThai ? translations.th : translations.en;
+        const savedPasswords = Array.from(elements.passwordList.children).map(li => li.querySelector('span').textContent);
+
+        if (savedPasswords.length === 0) {
+            showToast(lang.messages.noPasswordToDownload);
+            return;
+        }
+
+        const passwordsText = savedPasswords.join('\n');
+        const blob = new Blob([passwordsText], { type: 'text/plain;charset=utf-8' }); // เพิ่ม charset
+        const a = D.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'passwords.txt';
+        D.body.appendChild(a);
+        a.click();
+        D.body.removeChild(a);
+        URL.revokeObjectURL(a.href); // ปล่อยทรัพยากร
+        showToast(lang.messages.downloading);
+    }
+
+    // Event Listeners
+    elements.langBtn.addEventListener('click', toggleLanguage);
+    elements.generateBtn.addEventListener('click', generatePassword);
+    elements.copyBtn.addEventListener('click', copyPassword);
+    elements.saveBtn.addEventListener('click', savePassword);
+    // elements.popupCloseBtn.addEventListener('click', closePopup); // ลบ Event Listener นี้ออก
+    elements.downloadBtn.addEventListener('click', downloadPasswords);
+
+    // Initial load
+    D.addEventListener('DOMContentLoaded', () => {
+        generatePassword();
+        updateSavedPasswordsDisplay(); // อัปเดตข้อความปุ่มในรายการที่บันทึกไว้
+    });
+  </script>
+</body>
+</html>
